@@ -16,6 +16,7 @@ import models.archs.EDVR_arch as EDVR_arch
 
 
 def main():
+    print('hello')
     #################
     # configurations
     #################
@@ -115,11 +116,15 @@ def main():
     avg_psnr_l, avg_psnr_center_l, avg_psnr_border_l = [], [], []
     subfolder_name_l = []
 
+    print('test_dataset_folder:', test_dataset_folder)
     subfolder_l = sorted(glob.glob(osp.join(test_dataset_folder, '*')))
+    print('list:', subfolder_l)
+    subfolder_l = ['../datasets/test/dance_small']
     subfolder_GT_l = sorted(glob.glob(osp.join(GT_dataset_folder, '*')))
     # for each subfolder
     for subfolder in subfolder_l:
         subfolder_name = osp.basename(subfolder)
+        print(subfolder_name)
         subfolder_name_l.append(subfolder_name)
         save_subfolder = osp.join(save_folder, subfolder_name)
 
@@ -138,8 +143,10 @@ def main():
 
         # process each image
         for img_idx, img_path in enumerate(img_path_l):
+            print('path:', img_path)
             img_name = osp.splitext(osp.basename(img_path))[0]
             select_idx = data_util.index_generation(img_idx, max_idx, N_in, padding=padding)
+            print(select_idx)
             imgs_in = imgs_LQ.index_select(0, torch.LongTensor(select_idx)).unsqueeze(0).to(device)
 
             if flip_test:
@@ -149,6 +156,7 @@ def main():
             output = util.tensor2img(output.squeeze(0))
 
             if save_imgs:
+                print('im_path:', osp.join(save_subfolder, '{}.png'.format(img_name)))
                 cv2.imwrite(osp.join(save_subfolder, '{}.png'.format(img_name)), output)
 
             # # calculate PSNR
@@ -197,11 +205,11 @@ def main():
     logger.info('Model path: {}'.format(model_path))
     logger.info('Save images: {}'.format(save_imgs))
     logger.info('Flip test: {}'.format(flip_test))
-    logger.info('Total Average PSNR: {:.6f} dB for {} clips. '
-                'Center PSNR: {:.6f} dB. Border PSNR: {:.6f} dB.'.format(
-                    sum(avg_psnr_l) / len(avg_psnr_l), len(subfolder_l),
-                    sum(avg_psnr_center_l) / len(avg_psnr_center_l),
-                    sum(avg_psnr_border_l) / len(avg_psnr_border_l)))
+    #logger.info('Total Average PSNR: {:.6f} dB for {} clips. '
+    #            'Center PSNR: {:.6f} dB. Border PSNR: {:.6f} dB.'.format(
+    #               sum(avg_psnr_l) / len(avg_psnr_l), len(subfolder_l),
+    #                sum(avg_psnr_center_l) / len(avg_psnr_center_l),
+    #                sum(avg_psnr_border_l) / len(avg_psnr_border_l)))
 
 
 if __name__ == '__main__':
