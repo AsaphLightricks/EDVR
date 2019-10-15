@@ -75,7 +75,7 @@ def main():
 
     #### dataset
     if data_mode == 'Vid4':
-        test_dataset_folder = '../datasets/Vid4/BIx4'
+        test_dataset_folder = '../datasets/Vid4/test'
         GT_dataset_folder = '../datasets/Vid4/GT'
     else:
         if stage == 1:
@@ -118,7 +118,7 @@ def main():
     subfolder_l = sorted(glob.glob(osp.join(test_dataset_folder, '*')))
     subfolder_GT_l = sorted(glob.glob(osp.join(GT_dataset_folder, '*')))
     # for each subfolder
-    for subfolder, subfolder_GT in zip(subfolder_l, subfolder_GT_l):
+    for subfolder in subfolder_l:
         subfolder_name = osp.basename(subfolder)
         subfolder_name_l.append(subfolder_name)
         save_subfolder = osp.join(save_folder, subfolder_name)
@@ -130,9 +130,9 @@ def main():
 
         #### read LQ and GT images
         imgs_LQ = data_util.read_img_seq(subfolder)
-        img_GT_l = []
-        for img_GT_path in sorted(glob.glob(osp.join(subfolder_GT, '*'))):
-            img_GT_l.append(data_util.read_img(None, img_GT_path))
+        # img_GT_l = []
+        # for img_GT_path in sorted(glob.glob(osp.join(subfolder_GT, '*'))):
+        #     img_GT_l.append(data_util.read_img(None, img_GT_path))
 
         avg_psnr, avg_psnr_border, avg_psnr_center, N_border, N_center = 0, 0, 0, 0, 0
 
@@ -151,24 +151,24 @@ def main():
             if save_imgs:
                 cv2.imwrite(osp.join(save_subfolder, '{}.png'.format(img_name)), output)
 
-            # calculate PSNR
-            output = output / 255.
-            GT = np.copy(img_GT_l[img_idx])
-            # For REDS, evaluate on RGB channels; for Vid4, evaluate on the Y channel
-            if data_mode == 'Vid4':  # bgr2y, [0, 1]
-                GT = data_util.bgr2ycbcr(GT, only_y=True)
-                output = data_util.bgr2ycbcr(output, only_y=True)
-
-            output, GT = util.crop_border([output, GT], crop_border)
-            crt_psnr = util.calculate_psnr(output * 255, GT * 255)
-            logger.info('{:3d} - {:25} \tPSNR: {:.6f} dB'.format(img_idx + 1, img_name, crt_psnr))
-
-            if img_idx >= border_frame and img_idx < max_idx - border_frame:  # center frames
-                avg_psnr_center += crt_psnr
-                N_center += 1
-            else:  # border frames
-                avg_psnr_border += crt_psnr
-                N_border += 1
+            # # calculate PSNR
+            # output = output / 255.
+            # GT = np.copy(img_GT_l[img_idx])
+            # # For REDS, evaluate on RGB channels; for Vid4, evaluate on the Y channel
+            # if data_mode == 'Vid4':  # bgr2y, [0, 1]
+            #     GT = data_util.bgr2ycbcr(GT, only_y=True)
+            #     output = data_util.bgr2ycbcr(output, only_y=True)
+            #
+            # output, GT = util.crop_border([output, GT], crop_border)
+            # crt_psnr = util.calculate_psnr(output * 255, GT * 255)
+            # logger.info('{:3d} - {:25} \tPSNR: {:.6f} dB'.format(img_idx + 1, img_name, crt_psnr))
+            #
+            # if img_idx >= border_frame and img_idx < max_idx - border_frame:  # center frames
+            #     avg_psnr_center += crt_psnr
+            #     N_center += 1
+            # else:  # border frames
+            #     avg_psnr_border += crt_psnr
+            #     N_border += 1
 
         avg_psnr = (avg_psnr_center + avg_psnr_border) / (N_center + N_border)
         avg_psnr_center = avg_psnr_center / N_center
